@@ -1,12 +1,16 @@
 export default async function handler(req, res) {
   const target = "https://downdetector.com/";
 
-  const response = await fetch(target);
-  const body = await response.text();
+  const upstream = await fetch(target);
+  let html = await upstream.text();
 
-  // iframe拒否ヘッダー除去
+  // --- iframe ブロック系 JavaScript を削除 ---
+  html = html.replace(/if\s*\(\s*window\.top\s*!==\s*window\.self[\s\S]*?\}/g, "");
+  html = html.replace(/location\.href\s*=\s*['"].*?['"]/g, "// removed redirect");
+
+  // --- セキュリティヘッダー除去 ---
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Access-Control-Allow-Origin", "*");
 
-  res.send(body);
+  res.send(html);
 }
